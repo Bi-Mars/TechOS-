@@ -1,114 +1,217 @@
-
-//Import Libraries
+#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <windows.h>
+#include<time.h>
+#include <sys/time.h>
 
-//import .h files
-/*
-#include "date.h"
-#include "help.h"
-#include "viewdate.h"
-#include "version.h"
-#include "setdate.h"
-#include "terminate.h"
-*/
 #include "commands.h"
+#include "queue.h"
+#include "greetings.h"
 
-//main
-int main(void){
 
- initialize(); // call this function from date.c
+  void main()
+{
+  // greetings
+  greet();
+  initialize(); //date.c
 
-// Declare Global Variable
-char user_choice[20] ; //declare an array that holds characters. 20 memory slots
+  // create an array of char, input will be stored in this array
+  char str[20];
+  char *pid = (char *) malloc(sizeof(char) * 32); //32 character long
+  memset(pid, '\0', 32 * sizeof(char) );
 
-//take input from users
-do{
+  do
+  {
+    /* get the user's input. Store the input in str array
+     * fgets(char *str, int n, FILE *stream)
+     * reads a line from the specified stream and
+     * stores it into the string pointed by str
+     */
+
     printf("\n PADJIP_BIMARSH TechOS>>> ");
-    
-    /*fgets(char *str, int n, FILE *STREAM)
-        * reads the user input from specified strem
-        * Stores it into char pointer --> array of char
-    */
-    fgets(user_choice, 25, stdin);
-    
+    fgets(str, 20, stdin);
 
-    // strlwr(string) --> coverts given string into lower case
-    if(strcmp(strlwr(user_choice), "version\n") == 0)
+    // if the input is "help" --> strcmp (comapares the string)
+    if(strcmp(str, "help\n") == 0)
     {
-        version(); // call this function from version.c
-    } // version
+      //call help method from library
+      help();
+    }
 
-    else if(strcmp(strlwr(user_choice), "help\n") == 0)
+    else
+      if (strcmp(str, "version\n") == 0)
     {
-        help(); // call this fuction from help.c
+      //call version from the library
+      version();
+    }
 
-    }// help
 
-    else if(strcmp(strlwr(user_choice), "help version\n") == 0)
+    else
+      if (strcmp(str, "date\n") == 0)
     {
-        helpVersion(); // call this function from help.c
+      //call date from the library
+      viewdate();
+    }
 
-    }// help version
-
-    else if(strcmp(strlwr(user_choice), "help date\n") == 0)
+    else if (strcmp(str, "time\n") == 0)
     {
-        helpdate(); // call this function from help.c
+      //call time from the library
+      viewtime();
+    }
 
-    }// help date
 
-    else if(strcmp(strlwr(user_choice), "help setdate\n") == 0)
+    else if (strcmp(str, "setdate\n") == 0)
     {
-        helpSetdate(); // call this function from help.c
+      askDate();
+    }
+
+    else if (strcmp(str, "exit\n") == 0)
+    {
+        terminate();
+    }
+
+     else if(strcmp(str, "createPCB\n") == 0)
+    {
+        // take user input and validate
+       
+        unsigned int pclass, priority;
+        struct pcb *userReadyPCB, *userBlockPCB, *usersuspendReady, *usersuspendBlock;
+        // pid = (char *) malloc();
+
+        //------------------prompt for process name -------------------------------
+        do
+        {
+            printf("Enter process name: \n");
+            scanf("%s", pid);  
+           
+            //check if the name already exist
+            userReadyPCB = checkReadyPCB(pid);
+          
+            userBlockPCB = checkBlockPCB(pid);
+           
+            usersuspendReady = checksuspendReady(pid);
+        
+            usersuspendBlock = checksuspendBlock(pid);
+            
+            
+            if(usersuspendReady != NULL)
+            {
+                printf("Process Name already exist. The process %s currently resides in suspend Ready Queue.\n", pid);
+            }
+
+           else if(usersuspendBlock != NULL)
+            {
+                printf("Process Name already exist. The process %s currently resides in suspend Block Queue.\n", pid);
+            }
+
+            else if(userReadyPCB != NULL)
+            {
+                printf("Process Name already exist. The process %s currently resides in Ready Queue.\n", pid);
+            }
+
+            else if (userBlockPCB != NULL)
+            {
+                printf("process name already exist. The process %s currently resides in Block queue.\n", pid);
+            }
+        
+        } while(strlen(pid) < 8 || userReadyPCB!= NULL || userBlockPCB != NULL || usersuspendBlock != NULL || usersuspendReady != NULL);
+
+        //----------------------------- Prompt for process class --------------------------------
+        do
+        {
+            printf("Enter the process class: 0 for system process and 1 for application process.\n");
+            scanf("%d", &pclass);
+        } while (pclass<0 || pclass>1);
+
+        // ------------------------------ prompt for priority ----------------------------------
+        do
+        {
+            printf("Assign the priority to the process: 0-9.\n");
+            scanf("%d", &priority);
+        } while (priority<0 || priority>9);
+
+        
+        createPCB(pid, pclass, priority); // call this function from managePCB.c
+    } // createPCB
+
+//-------------------------deletePCB -------------------------------------------------------------------------
+    else if(strcmp(str, "deletePCB\n") == 0)
+    {
+
+        printf("Enter process name: \n");
+        scanf("%s", pid); //%ms tells compiler to take all string and store the pointer to first character to pid 
+        deletePCB(pid); // call this fuction from managePCB.c
+
+    }
+
+//---------------------------BLOCK PCB ---------------------------------
+    else if(strcmp(str, "blockPCB\n") == 0)
+    {
+        printf("Enter process name: \n");
+        scanf("%s", pid); //%ms tells compiler to take all string and store the pointer to first character to pid 
+        blockPCB(pid); // call this function from managePCB.c
+
+    }
+
+    else if(strcmp(str, "unblockPCB\n") == 0)
+    {
+        printf("Enter process name: \n");
+        scanf("%s", pid); //%ms tells compiler to take all string and store the pointer to first character to pid
+        unblockPCB(pid); // call this function from managePCB.c
+
+    }
+
+    else if(strcmp(str, "suspendPCB\n") == 0)
+    {
+        printf("Enter process name: \n");
+        scanf("%s", pid); //%ms tells compiler to take all string and store the pointer to first character to pid
+        suspendPCB(pid); // call this function from help.c
 
     }// help set date
 
-    else if(strcmp(strlwr(user_choice), "help time\n") == 0)
+    else if(strcmp(str, "resumePCB\n") == 0)
     {
-        helptime(); // call this function from help.c
+        printf("Enter process name: \n");
+        scanf("%s", pid); //%ms tells compiler to take all string and store the pointer to first character to pid
+        resumePCB(pid); // call this function from help.c
 
     }// help time
 
-     else if(strcmp(strlwr(user_choice), "help terminate\n") == 0)
+     else if(strcmp(str, "setPriority\n") == 0)
     {
-        helpterminate(); // call this function from help.c
+        printf("Enter process name that you would like to change the priority.\n");
+        scanf("%s", pid);
+
+        unsigned int priority;
+        printf("Enter process prority. Enter between 0 to 9\n");
+        scanf("%d", &priority);
+
+        setPriority(pid, priority); // call this function from help.c
 
     }// help terminate
 
-    else if (strcmp(strlwr(user_choice), "terminate\n") == 0)
+    else if (strcmp(str, "showPCB\n") == 0)
     {
-        terminate(); // call this function from terminate.c
+        printf("Enter process name that you would like to view.\n");
+        scanf("%s", pid);
+        showPCB(pid); // call this function from terminate.c
     }
 
-    else if(strcmp(strlwr(user_choice), "date\n") == 0)
+    else if(strcmp(str, "readyProcess\n") == 0)
     {
-        viewdate(); // call this function from viewdate.c
+        showReadyProcess(); // call this function from viewdate.c
     }
 
 
-    else if(strcmp(strlwr(user_choice), "setdate\n") == 0)
+    else if(strcmp(str, "blockProcess\n") == 0)
     {
-        askDate();
-        setdate(); // call this function from setdate.c
+        showBlockedProcess();
     }
 
-    else if(strcmp(strlwr(user_choice), "time\n") == 0)
+    else if(strcmp(str, "allProcess\n") == 0)
     {
-        viewtime(); // call this function from time.c
+        showAllProcess(); // call this function from time.c
     }
    
 
-    else
-    {
-        printf("Enter Valid Command. Type help to look for commands.");
-    }
-
-
-} while(strcmp(user_choice , "terminate\n") != 0);
-
-
-
-return 0;
-
+  }while (str != "exit");
 }

@@ -9,6 +9,13 @@ int dd;
 int yy;
 int check; 
 
+void setdate()
+ {
+     month = mm;
+     day = dd;
+     year = yy;
+ }
+
 void askDate(){
     
     do{ 
@@ -48,14 +55,7 @@ void askDate(){
             printf("Year is not valid.\n");
         }
      }while(check == 1);
+
+     setdate();
     
 }
-
-
- void setdate()
- {
-     month = mm;
-     day = dd;
-     year = yy;
- }
-

@@ -5,59 +5,33 @@
 #include <string.h>
 
 
-
-struct queue *readyq ;
-void initializeReady()
-{
-    //create an instance of queue:
-  readyq = (struct queue*) malloc(sizeof(struct queue));
-
-  //initialize the queue
-  readyq->count = 0;
-  readyq->front= NULL;
-  readyq->rear = NULL;
-}
-
-int isEmptyReady()
-{
-    if(readyq->front != NULL)
-    {
-        return (readyq->front == NULL);
-    }
-    else
-    {
-        return 1;
-    } 
-    
-}
-
-
 void enqueueReady(struct pcb *newPCB)
 {
     struct pcb *temp;
     
- 
-     if(isEmptyReady()) // if the queue is empty
+     if(frontReady == NULL) // if the queue is empty
      {
-         readyq->front = newPCB;
-         newPCB->previous_PCB = readyq->front;
-          readyq->rear = newPCB;
-         newPCB->next_PCB = readyq->rear;
+         frontReady = newPCB;
+         newPCB->previous_PCB = &frontReady; // store address of frontReady into newPCB->previous_PCB
+          rearReady = newPCB;
+         newPCB->next_PCB = &rearReady; // store address of frontReady into newPCB->previous_PCB
+         printf(" PCB after added to queue %s\n", frontReady->pid);
         // temp = q->front;
      }
 
-    else if(newPCB-> priority > readyq->front->priority)
+    else if(newPCB-> priority > frontReady->priority)
     {
         //printf("temp->priority %d.\n", temp->priority);
-        newPCB->next_PCB = readyq->front;
-        readyq->front = newPCB;
-        newPCB->previous_PCB = readyq->front;
-        newPCB->next_PCB->previous_PCB = newPCB; 
+        newPCB->next_PCB = frontReady;
+        frontReady->previous_PCB = newPCB;
+        frontReady = newPCB;
+        newPCB->previous_PCB = &frontReady;
+        
     }
      else
-           temp = readyq->front;
-        {
-         while(!(newPCB->priority > temp->priority) && (temp != readyq->rear))
+     {
+           temp = frontReady;
+         while(!(newPCB->priority > temp->priority) && (temp->next_PCB != &rearReady))
             {
                 printf("enqueueReady priority %d \n", temp->priority);
              temp = temp->next_PCB;
@@ -68,132 +42,152 @@ void enqueueReady(struct pcb *newPCB)
             newPCB->next_PCB = temp;
             newPCB->previous_PCB = temp->previous_PCB;
             temp->previous_PCB = newPCB;
-           // temp = temp->previous_PCB;
-           temp = newPCB->previous_PCB;
-           temp->next_PCB = newPCB;
-            
-        }
+            temp = newPCB->previous_PCB;
+            temp->next_PCB = newPCB;
+           
+         }
 
         else
         {
                 newPCB->previous_PCB = temp;
                 temp->next_PCB = newPCB;
-                 readyq->rear = newPCB;
-                newPCB->next_PCB = readyq->rear;
+                rearReady = newPCB;
+                newPCB->next_PCB = &rearReady;
         }
-        
-         
      }
 
-     readyq->count++;
-     free(temp);
+   //  free(temp);
 }
 
 
 //dequeue
 void dequeueReady()
 {
-    struct pcb *temp = readyq->front;
-
+    struct pcb *temp = frontReady;
     //dequeue from front
-    readyq->front = temp->next_PCB;
-    temp->next_PCB->previous_PCB = readyq->front;
+    frontReady = temp->next_PCB;
+    temp->next_PCB->previous_PCB = &frontReady;
     printf("process successfully removed from Ready queue\n");  
-    readyq->count--;
-
-    free(temp);
+   // free(temp);
 }
 
 int removeReady(struct pcb *deleteMe)
 {
     struct pcb *temp;
 
-    temp = readyq->front;
+    temp = frontReady;
 
     if(temp == deleteMe)
     {
-        readyq->front = temp->next_PCB; 
-        temp->next_PCB->previous_PCB = readyq->front;
-         printf("process successfully removed from Ready queue\n");
-         
-        readyq->count--;
-        return 1;
+        if(temp->previous_PCB == (&rearBlock))
+        {
+            frontBlock = NULL;
+            rearBlock = NULL;
+            //free(temp);
+            return 0;
+        }
+
+        else
+        {
+            frontReady = temp->next_PCB; 
+        temp->next_PCB->previous_PCB = &frontReady;
+        // printf("process successfully removed from Ready queue\n");
+        //free(temp);
+     //   printf("about to return 1\n");
+        return 1; // removed successfully
         //free(temp->pid);
-       
+        }
     }
 
     else
     {
-            while(temp != deleteMe && temp->next_PCB != readyq->rear)
-            {
-                temp = temp->next_PCB;
-            }
+        while(temp != deleteMe && temp->next_PCB != (&rearReady))
+        {
+            temp = temp->next_PCB;
+        }
         if(temp == deleteMe)
         {
-         temp->previous_PCB->next_PCB = temp->next_PCB;
-         temp->next_PCB->previous_PCB = temp->previous_PCB;      
-         readyq->count--;
-         printf("process successfully removed from Ready queue\n");
-         return 1;      
+            if(temp->next_PCB == &rearBlock)
+            {
+                temp->next_PCB->previous_PCB = &rearBlock;
+                rearBlock = temp->next_PCB;
+               // free(temp);
+                return 1;
+            }
+
+            else
+            {
+            temp->previous_PCB->next_PCB = temp->next_PCB;
+            temp->next_PCB->previous_PCB = temp->previous_PCB;      
+            //printf("process successfully removed from Ready queue\n");
+          //  free(temp);
+            return 1;  
+            }
+              
         }
         else
         {
+           // free(temp);
             return 0;
              // printf("process not found\n");
-        }      
-    }
+        } 
 
-     free(temp);
+    }     
 }
 
 //void traverse
 struct pcb* checkReadyPCB(char *pname)
 {
-       char *tempstr = (char *) malloc(sizeof(char) * 32);
-        struct pcb *temp;// = (struct pcb *) malloc(sizeof(struct pcb));;
-        temp = readyq->front;
-    printf("count-> %d\n", readyq->count);
-    if(temp != NULL)
+        char *name;
+        struct pcb *temp; 
+        int compare;
+
+    if(frontReady == NULL)
     {
-         strcpy(tempstr, readyq->front->pid);
-       // strcpy(tempstr,temp->pid);
-     printf("This is string in temp->pid %s\n", tempstr);
-   
-    int compare = strcmp(pname, tempstr); // returns 0 is they are equal
-    printf("%s\n", temp->pid);
-    printf(" compare : %d\n", compare);
-    printf("log1.2\n");
-
-        while( compare != 0 && temp != readyq->rear)
-        {
-            printf("log1.3\n");
-            compare = strcmp(pname, temp->pid);
-               
-                 printf("log1.3.1\n");
-            temp =  temp -> next_PCB;
-             printf("log1.4\n");
-
-        }
-                printf("log1.5\n");
-
-            compare = strcmp(pname, temp->pid);
-
-
-         if( compare == 0 )
-        {
-            return temp; // PCB of given pid exist
-        }
+        //printf("No PCB inside Ready Queue.\n");
+        return NULL;
     }
 
-        return NULL;
+
+    else
+    {
+        temp = frontReady;
+        name = temp->pid;  
+
+
+        compare = strcmp(pname, temp->pid);
+        
+
+        while((compare != 0) && (temp->next_PCB != (&rearReady)))
+        {
+            temp = temp->next_PCB;
+            compare = strcmp(pname, temp->pid);
+        }
+
+        if(compare == 0)
+        {
+           
+            return temp;
+        }
+        else
+        {
+            return NULL;
+        }
+    }
 
 }
 
 void traverseReady()
 {
-    struct pcb *temp = readyq->front;
-
-    while(temp != readyq->rear)
+    struct pcb *temp = frontReady;
+    if(frontReady == NULL)
+    {
+        printf("No PCB in ready Queue.\n");
+    }
+    else
+    {
+    
+    while(temp != &rearReady)
     {
         printf("Process' ID: %s\n", temp->pid);
         printf("Process' Class: %d. 0 stands for system process and 1 stands for application process\n", temp->pclass);
@@ -202,7 +196,9 @@ void traverseReady()
         printf("Process' suspend status: %d. 0 stands for n0n-suspended and 1 stands for suspended.\n", temp->suspend);
         printf("Process' next Process ID: %s\n", temp->next_PCB->pid);
         printf("process' previous process ID: %s\n", temp->previous_PCB->pid);
+        printf("---------------------------------------------------------------------------------------------------------------------\n");
         temp = temp->next_PCB;
     }
-    free(temp);
+    }
+    //free(temp);
 }

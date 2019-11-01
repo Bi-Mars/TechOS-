@@ -4,71 +4,61 @@
 #include <stdio.h>
 #include <string.h>
 
- struct queue *q;
-
-void initializeBlock( )
-{
-    q = (struct queue*) malloc(sizeof(struct queue));
-    q->count = 0;
-    q->front = NULL;
-    q-> rear =  NULL;
-}
-
-int isEmptyBlock()
-{
-    if(q->front== NULL)
-    {
-        return (q->front == NULL);
-    }
-
-    return 1;
-}
 
 //Enqueue
 
 void enqueueBlock(struct pcb *newBlock)
 {
     struct pcb *temp;
-    temp = q->front;
-
-    if(isEmptyBlock())
+    
+    if(frontBlock == NULL)
     {
-        q->front = newBlock;
-        newBlock->previous_PCB = q->front;
-        q->rear = newBlock;
-        newBlock->next_PCB = q->rear;
+        frontBlock = newBlock;
+        newBlock->next_PCB = &frontBlock;
+        rearBlock = newBlock;
+        newBlock->previous_PCB = &rearBlock;
     }
 
     else
     {
-        /*while(temp->next_PCB != q->rear )
-        {
-            temp = temp->next_PCB;
-        }
-
-        newBlock->previous_PCB = temp;
-        temp->next_PCB = newBlock;
-        q->rear = newBlock;
-        newBlock->next_PCB = q->rear;   
-        */
-       newBlock->next_PCB =  q->front;
-       q->front = newBlock;
-       newBlock->previous_PCB = q->front;
-       temp->previous_PCB = newBlock;
+        temp = rearBlock;
+        newBlock->previous_PCB = &rearBlock;
+        rearBlock = newBlock;
+        temp->previous_PCB = newBlock;
+        newBlock->next_PCB = temp;
     }
-    q->count++;
-    free(temp);
+   // free(temp);
     
 }
 //Dequeue
 
 void dequeueBlock(struct pcb *deleteMe)
 {
-    struct pcb *temp = q->rear;
-    q->rear = temp->previous_PCB;
-    temp->previous_PCB->next_PCB = q->rear;
-    q->count--;
-    free(temp);
+    struct pcb *temp;
+    if(frontBlock == NULL)
+    {
+        printf("There are no PCB in blocked queue");
+    }
+
+    else
+    {
+        temp = frontBlock;
+
+        if(temp->next_PCB == &rearBlock)
+        {
+            frontBlock = NULL;
+            rearBlock = NULL;
+        }
+
+        else
+        {
+            frontBlock = temp->previous_PCB;
+            temp->previous_PCB->next_PCB = &frontBlock;
+        }
+        
+    }
+    
+   // free(temp);
 }
 
 
@@ -77,81 +67,112 @@ int removeBlock(struct pcb *deleteMe)
 {
     struct pcb *temp;
 
-    temp = q->front;
+    temp = rearBlock;
 
     if(temp == deleteMe)
     {
-        q->front = temp->next_PCB; 
-        temp->next_PCB->previous_PCB = q->front;
-          printf("process successfully removed from Block queue\n");
-        //free(temp->pid);
-        
-        q->count--;
-        return 1;
-       
-    }
+        if(temp->next_PCB == (&frontBlock))
+        {
+            frontBlock = NULL;
+            rearBlock = NULL;
+        //    free(temp);
+            return 0;
+        }
 
+        else
+        {   
+            rearBlock = temp->next_PCB;
+            temp->previous_PCB = &rearBlock;
+        }
+      //  free(temp);
+        return 1; // successfully removed
+    }
     else
     {
-         while(temp != deleteMe && temp->next_PCB != q->rear)
+         while(temp != deleteMe && temp->next_PCB != (&frontBlock))
         {
          temp = temp->next_PCB;
         }
+        
         if(temp == deleteMe)
         {
-            temp->previous_PCB->next_PCB = temp->next_PCB;
-            temp->next_PCB->previous_PCB = temp->previous_PCB;
-            printf("process successfully removed from Block queue\n");
-            q->count--;
-            return 1;
+            if(temp->next_PCB == &frontBlock)
+            {
+                temp->previous_PCB->next_PCB = &frontBlock;
+                frontBlock = temp->previous_PCB;
+              //  free(temp);
+                return 1;
+            }
+
+            else
+            {
+                temp->next_PCB->previous_PCB = temp->previous_PCB;
+                temp->previous_PCB->next_PCB = temp->next_PCB;
+              //  free(temp);
+                return 1;
+            }
         }
         else
         {
 
             printf("Process not found\n");
+           //  free(temp);
             return 0;
-        }
-        
+        }  
        
-    }   
-     free(temp);
+    }     
 }
 
 //void traverse
 struct pcb* checkBlockPCB(char *pname)
 {
         struct pcb *temp;
-        temp = q->front;
+        char *name;
+        int compare;
 
-    if(temp != NULL)
+    if(rearBlock == NULL)
     {
-
-    int compare = strcmp(pname, temp->pid); // returns 0 is they are equal
-
-        while( compare != 0 && temp->next_PCB != q->rear)
-        {
-            temp =  temp -> next_PCB;
-            compare = strcmp(pname, temp->pid);
-        }
-
-            compare = strcmp(pname, temp->pid);
-
-
-         if( compare == 0 )
-        {
-            return temp; // PCB of given pid exist
-        }
+        return NULL;
     }
 
-        return NULL;
+    else
+    {
+        temp = rearBlock;
+        name = temp->pid;
 
+        compare = strcmp(pname, temp->pid);
+        while((compare != 0) && (temp->next_PCB) != (&frontBlock))
+        {
+            temp = temp->next_PCB;
+        }
+
+        if(compare == 0)
+        {
+          //  free(name);
+            return temp;
+        }
+
+        else
+        {
+          //  free(name);
+           // free(temp);
+            return NULL;
+        }
+        
+    }
 }
 
 void traverseBlock()
 {
-    struct pcb *temp = q->front;
+    struct pcb *temp = rearBlock;
 
-    while(temp->next_PCB != q->rear)
+    if(rearBlock == NULL)
+    {
+        printf("No PCB in blocked Queue.\n");
+    }
+    else
+    {
+    while(temp != &frontBlock)
     {
         printf("Process' ID: %s\n", temp->pid);
         printf("Process' Class: %d. 0 stands for system process and 1 stands for application process\n", temp->pclass);
@@ -160,6 +181,9 @@ void traverseBlock()
         printf("Process' suspend status: %d. 0 stands for n0n-suspended and 1 stands for suspended.\n", temp->suspend);
         printf("Process' next Process ID: %s\n", temp->next_PCB->pid);
         printf("process' previous process ID: %s\n", temp->previous_PCB->pid);
+        ("---------------------------------------------------------------------------------------------------------------------\n");
         temp = temp->next_PCB;
     }
+    }
+  //  free(temp);
 }

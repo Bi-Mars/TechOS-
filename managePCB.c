@@ -25,7 +25,7 @@ struct pcb *allocatePCB()
    
     newPCB = (struct pcb *) malloc(sizeof(struct pcb)); 
     newPCB->pid = (char *) malloc(sizeof(char) * 32); // allocate dynamic size for name of the process
-
+    memset(newPCB->pid, '\0', 32 * sizeof(char) );
     return newPCB;
 }
 
@@ -40,6 +40,8 @@ struct pcb *setupPCB(char *pid, unsigned int pClass, unsigned int pPriority)
    // justCreatedPCB->pid = pid + '\0';
    //strcpy(destination, source,n) --> function that copy source string into destination string
     // length of destination must be greater or equals to source, not less
+
+
     strcpy(justCreatedPCB->pid, pid);
     justCreatedPCB->pclass = pClass; //process class
     justCreatedPCB->priority = pPriority; // process priority
@@ -64,7 +66,7 @@ void freePCB(struct pcb *freeMe)
         free(freeMe);
         printf("Successfully removed PCB from ready Queue");
     }
-    else if(removeBlock(freeMe))
+   else if(removeBlock(freeMe))
     {
         free(freeMe->pid);
          free(freeMe);
@@ -89,6 +91,7 @@ void freePCB(struct pcb *freeMe)
     {
         printf("Process not found.\n");
     }
+    
        
 }
 
@@ -96,27 +99,29 @@ struct pcb* findPCB(char *pname)
 {
     struct pcb* tmpReady, *tmpBlock, *tmpsuspendReady, *tmpsuspendBlock;
     tmpReady = checkReadyPCB(pname);
+   
+   
     tmpBlock = checkBlockPCB(pname);
     tmpsuspendBlock = checksuspendBlock(pname);
     tmpsuspendReady = checksuspendReady(pname);
     
 
-    if(!tmpReady)
+    if(tmpReady != NULL)
     {
         return tmpReady;
     }
 
-    else if(!tmpBlock)
+    else if(tmpBlock != NULL)
     {
         return tmpBlock;
     }
 
-    if(!tmpsuspendReady)
+    else if(tmpsuspendReady != NULL)
     {
         return tmpsuspendReady;
     }
 
-    if(!tmpsuspendBlock)
+    else if(tmpsuspendBlock != NULL)
     {
         return tmpsuspendBlock;
     }
@@ -127,10 +132,11 @@ struct pcb* findPCB(char *pname)
         return NULL;
     }
 
-    free(tmpReady);
-    free(tmpBlock);
-    free(tmpsuspendReady);
-    free(tmpsuspendBlock);
+   // free(tmpReady);
+   
+   // free(tmpBlock);
+   // free(tmpsuspendReady);
+   // free(tmpsuspendBlock);
     
 }
 
@@ -149,29 +155,37 @@ void insertPCB(struct pcb *insertMe)
 
 void remove_PCB(struct pcb *removeMe)
 {
+
     if(removeReady(removeMe))
     {
-        dequeueReady(removeMe);
+       // dequeueReady(removeMe);
         printf("Successfully removed the process from Ready Queue.\n");
     }
-    else if(removeBlock(removeMe))
+  
+   else if(removeBlock(removeMe))
     {
-        dequeueBlock(removeMe);
+      //  dequeueBlock(removeMe);
         printf("Successfully removed the process from Blocked Queue.\n");
 
     }
 
     else if(removesuspendBlock(removeMe))
     {
-        dequeuesuspendBlock(removeMe);
+       // dequeuesuspendBlock(removeMe);
         printf("Successfully removed the process from Blocked Queue.\n");
 
     }
 
     else if(removesuspendReady(removeMe))
     {
-        dequeuesuspendReady(removeMe);
+      //  dequeuesuspendReady(removeMe);
         printf("Successfully removed the process from Blocked Queue.\n");
 
     }
+    else
+    {
+        printf("Process couldn't be removed");
+    }
+    
+    
 }

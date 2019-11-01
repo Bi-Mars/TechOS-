@@ -3,7 +3,14 @@ void viewdate();
 void version();
 void viewtime();
 void terminate();
+void askDate();
 void setdate();
+void help();
+void helpVersion();
+void helpdate();
+void helpSetdate();
+void helptime();
+void helpterminate();
 void initialize(); //date.c
 void createPCB(char *id, unsigned int pclass, unsigned int priority);
 void deletePCB(char *id);
